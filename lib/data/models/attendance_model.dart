@@ -5,7 +5,7 @@ class AttendanceModel {
   final int attended;
   final int total;
   final double percentage;
-  final Map<String, String> dailyStatus; 
+  final Map<String, String> dailyStatus;
 
   AttendanceModel({
     required this.subjectName,
@@ -20,16 +20,18 @@ class AttendanceModel {
         'attended': attended,
         'total': total,
         'percentage': percentage,
-        'dailyStatus': jsonEncode(dailyStatus), 
+        'dailyStatus': jsonEncode(dailyStatus),
       };
 
   factory AttendanceModel.fromMap(Map<String, dynamic> map) {
     return AttendanceModel(
-      subjectName: map['subjectName'],
-      attended: map['attended'],
-      total: map['total'],
-      percentage: map['percentage'],
-      dailyStatus: Map<String, String>.from(jsonDecode(map['dailyStatus'] ?? '{}')),
+      subjectName: map['subjectName'] as String,
+      attended: map['attended'] as int,
+      total: map['total'] as int,
+      percentage: map['percentage'] as double,
+      dailyStatus: Map<String, String>.from(
+        jsonDecode(map['dailyStatus'] as String? ?? '{}') as Map,
+      ),
     );
   }
 }
