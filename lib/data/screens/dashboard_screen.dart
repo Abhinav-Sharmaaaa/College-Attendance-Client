@@ -8,6 +8,8 @@ import '../../data/local/database_helper.dart';
 import '../../data/services/auth_interceptor.dart';
 import '../../data/services/html_parser_service.dart';
 import '../../data/models/attendance_model.dart';
+import '../widgets/subject_card.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -72,11 +74,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _loadInitial() async {
+    await _loadPreferences();
     _list = await DatabaseHelper.instance.getCached();
     _studentName = await _storage.read(key: 'student_name') ?? 'Student';
     setState(() {});
 
     await _sync();
+  }
+
+  // Load persisted UI preferences
+  Future<void> _loadPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedSession = prefs.getString('selectedSession') ?? _selectedSession;
+      _selectedSemester = prefs.getString('selectedSemester') ?? _selectedSemester;
+      _selectedMonth = prefs.getString('selectedMonth') ?? _selectedMonth;
+      _selectedYear = prefs.getString('selectedYear') ?? _selectedYear;
+      _isTableView = prefs.getBool('isTableView') ?? _isTableView;
+    });
+  }
+
+  // Save UI preferences after changes
+  Future<void> _savePreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('selectedSession', _selectedSession);
+    await prefs.setString('selectedSemester', _selectedSemester);
+    await prefs.setString('selectedMonth', _selectedMonth);
+    await prefs.setString('selectedYear', _selectedYear);
+    await prefs.setBool('isTableView', _isTableView);
+  }
+
+  // Clear stored session and prompt user to re‑login
+  Future<void> _clearSession() async {
+    await AuthInterceptorService().clearSession();
+    await _storage.delete(key: 'student_name');
+    setState(() {
+      _studentName = 'Student';
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Session cleared. Please log in again.'),
+        backgroundColor: Colors.orange,
+        duration: Duration(seconds: 4),
+      ),
+    );
   }
 
   Future<void> _sync() async {
@@ -318,7 +359,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   padding: const EdgeInsets.only(bottom: 30),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) => _buildSubjectCard(_list[index]),
+                      (context, index) => SubjectCard(data: _list[index]),
                       childCount: _list.length,
                     ),
                   ),
@@ -380,8 +421,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         : Icons.table_chart_rounded,
                     color: Colors.white70,
                   ),
-                  onPressed: () =>
-                      setState(() => _isTableView = !_isTableView),
+                  onPressed: () async {
+                      setState(() => _isTableView = !_isTableView);
+                      await _savePreferences();
+                    },
                   tooltip: 'Toggle View',
                 ),
               ),
@@ -551,9 +594,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 : val;
             return DropdownMenuItem(value: val, child: Text(prefix + label));
           }).toList(),
-          onChanged: (v) {
+          onChanged: (v) async {
             setState(() => fn(v));
-            _sync();
+            await _savePreferences();
+            await _sync();
           },
         ),
       ),
@@ -653,140 +697,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildSubjectCard(AttendanceModel data) {
-    bool isSafe = data.percentage >= 75;
-    Color accent =
-        isSafe ? const Color(0xFF10B981) : const Color(0xFFEF4444);
-
-    return Container(
-      margin: const EdgeInsets.only(left: 20, right: 20, top: 15),
-      decoration: BoxDecoration(
-        color: const Color(0xFF18181B),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
-      ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          iconColor: Colors.white54,
-          collapsedIconColor: Colors.white54,
-          tilePadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                data.subjectName,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Text(
-                    '${data.percentage.toInt()}%',
-                    style: TextStyle(
-                      color: accent,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: LinearPercentIndicator(
-                      lineHeight: 6.0,
-                      animation: true,
-                      percent: (data.percentage / 100).clamp(0, 1),
-                      progressColor: accent,
-                      backgroundColor: Colors.white.withOpacity(0.05),
-                      barRadius: const Radius.circular(10),
-                      padding: EdgeInsets.zero,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '${data.attended}/${data.total}',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.2),
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(20),
-                ),
-              ),
-              child: data.dailyStatus.isEmpty
-                  ? Text(
-                      _selectedMonth == '0'
-                          ? 'Daily tracking hidden in Full Semester mode.'
-                          : 'No daily tracking available.',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.4),
-                        fontSize: 12,
-                      ),
-                    )
-                  : Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: data.dailyStatus.entries.map((entry) {
-                        String status = entry.value;
-                        bool present = status.contains('P');
-                        return Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: present
-                                ? const Color(0xFF10B981).withOpacity(0.15)
-                                : const Color(0xFFEF4444).withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: present
-                                  ? const Color(0xFF10B981).withOpacity(0.3)
-                                  : const Color(0xFFEF4444).withOpacity(0.3),
-                            ),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                entry.key,
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.4),
-                                  fontSize: 9,
-                                ),
-                              ),
-                              Text(
-                                status,
-                                style: TextStyle(
-                                  color: present
-                                      ? const Color(0xFF10B981)
-                                      : const Color(0xFFEF4444),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
