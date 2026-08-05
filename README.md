@@ -18,14 +18,6 @@ A lightweight Flutter mobile app that lets students view their attendance data f
 - **Pull‑to‑refresh** – Swipe down to re‑sync attendance data at any time.
 - **Session management** – Helper to clear stored cookies and force a fresh login.
 
-## Screenshots
-
-*(Add screenshots in the `assets/screenshots/` folder and reference them here)*
-
-| Light mode | Dark mode |
-|------------|-----------|
-| ![screenshot‑light](assets/screenshots/light.png) | ![screenshot‑dark](assets/screenshots/dark.png) |
-
 ## Installation
 
 ### Prerequisites
