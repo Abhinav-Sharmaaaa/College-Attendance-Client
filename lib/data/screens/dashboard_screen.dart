@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:percent_indicator/linear_percent_indicator.dart';
 import '../../data/local/database_helper.dart';
 import '../../data/services/auth_interceptor.dart';
 import '../../data/services/html_parser_service.dart';
@@ -104,21 +103,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await prefs.setBool('isTableView', _isTableView);
   }
 
-  // Clear stored session and prompt user to re‑login
-  Future<void> _clearSession() async {
-    await AuthInterceptorService().clearSession();
-    await _storage.delete(key: 'student_name');
-    setState(() {
-      _studentName = 'Student';
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Session cleared. Please log in again.'),
-        backgroundColor: Colors.orange,
-        duration: Duration(seconds: 4),
-      ),
-    );
-  }
+  // NOTE: _clearSession was previously defined but never used in the UI.
+  // It has been removed to keep the codebase clean.
 
   Future<void> _sync() async {
     setState(() {
@@ -338,13 +324,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Icon(
                           Icons.auto_graph_rounded,
                           size: 60,
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withAlpha((0.1 * 255).round()),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           _isSyncing ? _syncStatusText : 'No Data Found',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.4),
+                            color: Colors.white.withAlpha((0.4 * 255).round()),
                             fontSize: 16,
                           ),
                         ),
@@ -391,7 +377,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Text(
                       'Welcome back,',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withAlpha((0.5 * 255).round()),
                         fontSize: 14,
                       ),
                     ),
@@ -437,16 +423,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
               gradient: LinearGradient(
                 colors: [
                   const Color(0xFF18181B),
-                  glowColor.withOpacity(0.15),
+                  glowColor.withAlpha((0.15 * 255).round()),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: glowColor.withOpacity(0.3), width: 1.5),
+              border: Border.all(color: glowColor.withAlpha((0.3 * 255).round()), width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  color: glowColor.withOpacity(0.1),
+                  color: glowColor.withAlpha((0.1 * 255).round()),
                   blurRadius: 20,
                   spreadRadius: 2,
                 ),
@@ -468,7 +454,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   progressColor: glowColor,
-                  backgroundColor: Colors.white.withOpacity(0.05),
+                  backgroundColor: Colors.white.withAlpha((0.05 * 255).round()),
                   circularStrokeCap: CircularStrokeCap.round,
                 ),
                 const SizedBox(width: 20),
@@ -496,7 +482,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         style: TextStyle(
                           color: _isSyncing
                               ? Colors.cyanAccent
-                              : Colors.white.withOpacity(0.6),
+                              : Colors.white.withAlpha((0.6 * 255).round()),
                           fontSize: 12,
                           height: 1.3,
                         ),
@@ -569,7 +555,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF18181B),
         borderRadius: BorderRadius.circular(25),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withAlpha((0.08 * 255).round())),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
