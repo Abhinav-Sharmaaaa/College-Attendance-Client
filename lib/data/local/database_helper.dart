@@ -14,7 +14,6 @@ class DatabaseHelper {
     return openDatabase(
       join(await getDatabasesPath(), filePath),
       version: 1,
-
       onCreate: (db, v) async {
         await db.execute('''
           CREATE TABLE attendance(

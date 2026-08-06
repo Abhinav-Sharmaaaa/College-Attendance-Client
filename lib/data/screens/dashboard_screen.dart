@@ -30,7 +30,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final _storage = const FlutterSecureStorage();
 
   static const String _attendancePageUrl =
-    'https://online.uktech.ac.in/ums/Student/User/ViewAttendance';
+      'https://online.uktech.ac.in/ums/Student/User/ViewAttendance';
 
   final List<Map<String, String>> _sessions = [
     {'id': '2024', 'name': '2024-25'},
@@ -80,7 +80,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await _sync();
   }
 
-  // Load persisted UI preferences
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -92,7 +91,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  // Save UI preferences after changes
   Future<void> _savePreferences() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('selectedSession', _selectedSession);
@@ -101,9 +99,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await prefs.setString('selectedYear', _selectedYear);
     await prefs.setBool('isTableView', _isTableView);
   }
-
-  // NOTE: _clearSession was previously defined but never used in the UI.
-  // It has been removed to keep the codebase clean.
 
   Future<void> _sync() async {
     setState(() {
@@ -307,10 +302,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           color: Colors.cyanAccent,
           backgroundColor: const Color(0xFF18181B),
           child: CustomScrollView(
-            physics:
-                const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics(),
-                ),
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
             slivers: [
               SliverToBoxAdapter(child: _buildHeader()),
               SliverToBoxAdapter(child: _buildFilterBar()),
@@ -320,17 +314,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.auto_graph_rounded,
-                          size: 60,
-                          color: Colors.white.withAlpha((0.1 * 255).round()),
+                        TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0.7, end: 1.0),
+                          duration: const Duration(milliseconds: 900),
+                          curve: Curves.elasticOut,
+                          builder: (context, scale, child) {
+                            return Transform.scale(scale: scale, child: child);
+                          },
+                          child: Icon(
+                            Icons.auto_graph_rounded,
+                            size: 60,
+                            color: Colors.white.withAlpha((0.1 * 255).round()),
+                          ),
                         ),
                         const SizedBox(height: 16),
-                        Text(
-                          _isSyncing ? _syncStatusText : 'No Data Found',
-                          style: TextStyle(
-                            color: Colors.white.withAlpha((0.4 * 255).round()),
-                            fontSize: 16,
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          child: Text(
+                            _isSyncing ? _syncStatusText : 'No Data Found',
+                            key: ValueKey(_isSyncing ? _syncStatusText : 'empty'),
+                            style: TextStyle(
+                              color: Colors.white.withAlpha((0.4 * 255).round()),
+                              fontSize: 16,
+                            ),
                           ),
                         ),
                       ],
@@ -344,7 +350,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   padding: const EdgeInsets.only(bottom: 30),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) => SubjectCard(data: _list[index]),
+                      (context, index) => SubjectCard(
+                        data: _list[index],
+                        index: index,
+                      ),
                       childCount: _list.length,
                     ),
                   ),
@@ -360,81 +369,120 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final theme = Theme.of(context);
     final overall = _overallPercentage;
     final bool isGood = overall >= 75;
-    final Color statusColor = isGood ? theme.colorScheme.primary : theme.colorScheme.error;
+    final Color statusColor =
+        isGood ? theme.colorScheme.primary : theme.colorScheme.error;
 
-    return Card(
-      margin: const EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Circular progress showing overall attendance
-            SizedBox(
-              height: 56,
-              width: 56,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  CircularProgressIndicator(
-                    value: overall / 100,
-                    color: statusColor,
-                    backgroundColor: theme.colorScheme.surface,
-                  ),
-                  Text(
-                    '${overall.toStringAsFixed(1)}%',
-                    style: theme.textTheme.titleMedium!.copyWith(
-                      color: statusColor,
-                      fontWeight: FontWeight.bold,
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOutBack,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value.clamp(0.0, 1.0),
+          child: Transform.translate(
+            offset: Offset(0, (1 - value.clamp(0.0, 1.0)) * 20),
+            child: child,
+          ),
+        );
+      },
+      child: Card(
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        elevation: 0,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: 56,
+                width: 56,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: overall / 100),
+                      duration: const Duration(milliseconds: 900),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, child) {
+                        return CircularProgressIndicator(
+                          value: value,
+                          color: statusColor,
+                          backgroundColor: theme.colorScheme.surface,
+                        );
+                      },
                     ),
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: overall),
+                      duration: const Duration(milliseconds: 900),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, child) {
+                        return Text(
+                          '${value.toStringAsFixed(1)}%',
+                          style: theme.textTheme.titleMedium!.copyWith(
+                            color: statusColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Welcome back,', style: theme.textTheme.bodyMedium),
+                    Text(
+                      _studentName,
+                      style: theme.textTheme.headlineSmall!.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Text(
+                        _isSyncing
+                            ? _syncStatusText
+                            : isGood
+                                ? 'You are in the safe zone! Keep it up.'
+                                : 'Warning: Shortage of attendance!',
+                        key: ValueKey(_isSyncing ? _syncStatusText : isGood),
+                        style: theme.textTheme.bodySmall!.copyWith(
+                          color: _isSyncing
+                              ? theme.colorScheme.secondary
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SegmentedButton<bool>(
+                segments: const [
+                  ButtonSegment(
+                    value: false,
+                    label: Text('Cards'),
+                    icon: Icon(Icons.grid_view_rounded),
+                  ),
+                  ButtonSegment(
+                    value: true,
+                    label: Text('Table'),
+                    icon: Icon(Icons.table_chart_rounded),
                   ),
                 ],
+                selected: {_isTableView},
+                onSelectionChanged: (newSelection) async {
+                  setState(() => _isTableView = newSelection.first);
+                  await _savePreferences();
+                },
               ),
-            ),
-            const SizedBox(width: 16),
-            // Greeting and status text
-            Expanded(
-                child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Welcome back,', style: theme.textTheme.bodyMedium),
-                Text(
-                  _studentName,
-                  style: theme.textTheme.headlineSmall!.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  _isSyncing
-                      ? _syncStatusText
-                      : isGood
-                          ? 'You are in the safe zone! Keep it up.'
-                          : 'Warning: Shortage of attendance!',
-                  style: theme.textTheme.bodySmall!.copyWith(
-                    color: _isSyncing
-                        ? theme.colorScheme.secondary
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            )),
-            // View toggle – SegmentedButton
-            SegmentedButton<bool>(
-              segments: const [
-                ButtonSegment(value: false, label: Text('Cards'), icon: Icon(Icons.grid_view_rounded)),
-                ButtonSegment(value: true, label: Text('Table'), icon: Icon(Icons.table_chart_rounded)),
-              ],
-              selected: {_isTableView},
-              onSelectionChanged: (newSelection) async {
-                setState(() => _isTableView = newSelection.first);
-                await _savePreferences();
-              },
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -507,7 +555,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-
   Widget _buildTableView() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
@@ -520,44 +567,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         child: DataTable(
-
           headingRowColor: WidgetStateProperty.all(Colors.black12),
           columnSpacing: 25,
           columns: const [
             DataColumn(
               label: Text(
                 'Subject',
-                style: TextStyle(
-                  color: Colors.cyanAccent,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold),
               ),
             ),
             DataColumn(
               label: Text(
                 'Held',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
               ),
             ),
             DataColumn(
               label: Text(
                 'Attended',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
               ),
             ),
             DataColumn(
               label: Text(
                 '%',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -576,16 +610,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 DataCell(
-                  Text(
-                    e.total.toString(),
-                    style: const TextStyle(color: Colors.white),
-                  ),
+                  Text(e.total.toString(), style: const TextStyle(color: Colors.white)),
                 ),
                 DataCell(
-                  Text(
-                    e.attended.toString(),
-                    style: const TextStyle(color: Colors.white),
-                  ),
+                  Text(e.attended.toString(), style: const TextStyle(color: Colors.white)),
                 ),
                 DataCell(
                   Text(
@@ -600,5 +628,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
 }

@@ -40,12 +40,6 @@ class AuthInterceptorService {
     await _storage.delete(key: 'session_cookie');
   }
 
-  // -----------------------------------------------------------------
-  // NEW: Perform a credential‑based login and persist the session cookie.
-  // -----------------------------------------------------------------
-  // This mirrors what the old WebView flow did, but uses a native POST
-  // request so that the credentials can be supplied by Google Password
-  // Manager (Smart‑Lock).
   Future<void> loginWithCredentials({
     required String username,
     required String password,
@@ -60,8 +54,6 @@ class AuthInterceptorService {
       body: {
         'UserName': username,
         'Password': password,
-        // Add any hidden fields (e.g. __RequestVerificationToken) if
-        // the portal requires them.
       },
     );
 
