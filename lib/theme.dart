@@ -2,10 +2,27 @@ import 'package:flutter/material.dart';
 
 const _seedColor = Color(0xFF6750A4);
 
-final ColorScheme _colorScheme = ColorScheme.fromSeed(
+final ColorScheme _lightColorScheme = ColorScheme.fromSeed(
   seedColor: _seedColor,
   brightness: Brightness.light,
 );
+
+final ColorScheme _darkColorScheme = ColorScheme.fromSeed(
+  seedColor: _seedColor,
+  brightness: Brightness.dark,
+);
+
+class ThemeController extends ValueNotifier<ThemeMode> {
+  ThemeController._() : super(ThemeMode.light);
+
+  static final ThemeController instance = ThemeController._();
+
+  bool get isDark => value == ThemeMode.dark;
+
+  void toggle() {
+    value = isDark ? ThemeMode.light : ThemeMode.dark;
+  }
+}
 
 class _ExpressiveTransitionsBuilder extends PageTransitionsBuilder {
   const _ExpressiveTransitionsBuilder();
@@ -47,7 +64,7 @@ class _ExpressiveTransitionsBuilder extends PageTransitionsBuilder {
   }
 }
 
-final ThemeData appTheme = ThemeData(
+ThemeData _buildTheme(ColorScheme _colorScheme) => ThemeData(
   useMaterial3: true,
   colorScheme: _colorScheme,
   scaffoldBackgroundColor: _colorScheme.surface,
@@ -183,3 +200,6 @@ final ThemeData appTheme = ThemeData(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
   ),
 );
+
+final ThemeData appTheme = _buildTheme(_lightColorScheme);
+final ThemeData appDarkTheme = _buildTheme(_darkColorScheme);

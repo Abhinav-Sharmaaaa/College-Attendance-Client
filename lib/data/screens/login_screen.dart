@@ -3,6 +3,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 import '../services/auth_interceptor.dart';
 import '../screens/dashboard_screen.dart';
+import '../../theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -74,6 +75,19 @@ class _LoginScreenState extends State<LoginScreen>
       appBar: AppBar(
         title: const Text('College Portal Login'),
         actions: [
+          ValueListenableBuilder<ThemeMode>(
+            valueListenable: ThemeController.instance,
+            builder: (context, mode, child) {
+              final isDark = mode == ThemeMode.dark;
+              return IconButton(
+                tooltip: isDark ? 'Switch to light' : 'Switch to dark',
+                onPressed: ThemeController.instance.toggle,
+                icon: Icon(
+                  isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                ),
+              );
+            },
+          ),
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: _refreshing ? 1 : 0),
             duration: const Duration(milliseconds: 600),

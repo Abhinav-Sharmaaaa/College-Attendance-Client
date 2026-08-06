@@ -12,10 +12,17 @@ class AttendanceApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: appTheme,
-      home: const LoginScreen(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeController.instance,
+      builder: (context, mode, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: appTheme,
+          darkTheme: appDarkTheme,
+          themeMode: mode,
+          home: const LoginScreen(),
+        );
+      },
     );
   }
 }

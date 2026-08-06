@@ -8,6 +8,7 @@ import '../../data/services/html_parser_service.dart';
 import '../../data/models/attendance_model.dart';
 import '../widgets/subject_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../theme.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -294,13 +295,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFF09090B),
+      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _sync,
-          color: Colors.cyanAccent,
-          backgroundColor: const Color(0xFF18181B),
+          color: colorScheme.primary,
+          backgroundColor: colorScheme.surfaceContainerHigh,
           child: CustomScrollView(
             physics: const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics(),
@@ -324,7 +326,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           child: Icon(
                             Icons.auto_graph_rounded,
                             size: 60,
-                            color: Colors.white.withAlpha((0.1 * 255).round()),
+                            color: colorScheme.onSurfaceVariant.withAlpha(90),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -334,7 +336,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             _isSyncing ? _syncStatusText : 'No Data Found',
                             key: ValueKey(_isSyncing ? _syncStatusText : 'empty'),
                             style: TextStyle(
-                              color: Colors.white.withAlpha((0.4 * 255).round()),
+                              color: colorScheme.onSurfaceVariant,
                               fontSize: 16,
                             ),
                           ),
@@ -391,88 +393,132 @@ class _DashboardScreenState extends State<DashboardScreen> {
         elevation: 0,
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                height: 56,
-                width: 56,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0, end: overall / 100),
-                      duration: const Duration(milliseconds: 900),
-                      curve: Curves.easeOutCubic,
-                      builder: (context, value, child) {
-                        return CircularProgressIndicator(
-                          value: value,
-                          color: statusColor,
-                          backgroundColor: theme.colorScheme.surface,
-                        );
-                      },
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    height: 52,
+                    width: 52,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0, end: overall / 100),
+                          duration: const Duration(milliseconds: 900),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, value, child) {
+                            return CircularProgressIndicator(
+                              value: value,
+                              strokeWidth: 4,
+                              color: statusColor,
+                              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                            );
+                          },
+                        ),
+                        TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0, end: overall),
+                          duration: const Duration(milliseconds: 900),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, value, child) {
+                            return Text(
+                              '${value.toStringAsFixed(0)}%',
+                              style: theme.textTheme.bodyMedium!.copyWith(
+                                color: statusColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                    TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0, end: overall),
-                      duration: const Duration(milliseconds: 900),
-                      curve: Curves.easeOutCubic,
-                      builder: (context, value, child) {
-                        return Text(
-                          '${value.toStringAsFixed(1)}%',
-                          style: theme.textTheme.titleMedium!.copyWith(
-                            color: statusColor,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Welcome back',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        Text(
+                          _studentName,
+                          style: theme.textTheme.titleLarge!.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Welcome back,', style: theme.textTheme.bodyMedium),
-                    Text(
-                      _studentName,
-                      style: theme.textTheme.headlineSmall!.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 6),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      child: Text(
-                        _isSyncing
-                            ? _syncStatusText
-                            : isGood
-                                ? 'You are in the safe zone! Keep it up.'
-                                : 'Warning: Shortage of attendance!',
-                        key: ValueKey(_isSyncing ? _syncStatusText : isGood),
-                        style: theme.textTheme.bodySmall!.copyWith(
-                          color: _isSyncing
-                              ? theme.colorScheme.secondary
-                              : theme.colorScheme.onSurfaceVariant,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
+                  ValueListenableBuilder<ThemeMode>(
+                    valueListenable: ThemeController.instance,
+                    builder: (context, mode, child) {
+                      final isDark = mode == ThemeMode.dark;
+                      return IconButton(
+                        tooltip: isDark ? 'Switch to light' : 'Switch to dark',
+                        onPressed: ThemeController.instance.toggle,
+                        icon: TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0, end: isDark ? 1 : 0),
+                          duration: const Duration(milliseconds: 450),
+                          curve: Curves.easeOutBack,
+                          builder: (context, value, child) {
+                            return Transform.rotate(
+                              angle: value * 3.14159,
+                              child: Icon(
+                                isDark
+                                    ? Icons.dark_mode_rounded
+                                    : Icons.light_mode_rounded,
+                                color: theme.colorScheme.primary,
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: Text(
+                  _isSyncing
+                      ? _syncStatusText
+                      : isGood
+                          ? 'You are in the safe zone! Keep it up.'
+                          : 'Warning: Shortage of attendance!',
+                  key: ValueKey(_isSyncing ? _syncStatusText : isGood),
+                  style: theme.textTheme.bodySmall!.copyWith(
+                    color: _isSyncing
+                        ? theme.colorScheme.secondary
+                        : theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
+              const SizedBox(height: 16),
               SegmentedButton<bool>(
+                style: SegmentedButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                ),
+                showSelectedIcon: false,
                 segments: const [
                   ButtonSegment(
                     value: false,
                     label: Text('Cards'),
-                    icon: Icon(Icons.grid_view_rounded),
+                    icon: Icon(Icons.grid_view_rounded, size: 18),
                   ),
                   ButtonSegment(
                     value: true,
                     label: Text('Table'),
-                    icon: Icon(Icons.table_chart_rounded),
+                    icon: Icon(Icons.table_chart_rounded, size: 18),
                   ),
                 ],
                 selected: {_isTableView},
@@ -556,49 +602,62 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildTableView() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF18181B),
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withAlpha(13)),
       ),
+      clipBehavior: Clip.antiAlias,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         child: DataTable(
-          headingRowColor: WidgetStateProperty.all(Colors.black12),
+          headingRowColor: WidgetStateProperty.all(
+            colorScheme.surfaceContainerHighest,
+          ),
           columnSpacing: 25,
-          columns: const [
+          columns: [
             DataColumn(
               label: Text(
                 'Subject',
-                style: TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             DataColumn(
               label: Text(
                 'Held',
-                style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             DataColumn(
               label: Text(
                 'Attended',
-                style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             DataColumn(
               label: Text(
                 '%',
-                style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
           rows: _list.map((e) {
-            Color c = e.percentage >= 75
-                ? const Color(0xFF10B981)
-                : const Color(0xFFEF4444);
+            Color c = e.percentage >= 75 ? colorScheme.primary : colorScheme.error;
             return DataRow(
               cells: [
                 DataCell(
@@ -606,14 +665,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     e.subjectName.length > 20
                         ? '${e.subjectName.substring(0, 20)}...'
                         : e.subjectName,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: colorScheme.onSurface),
                   ),
                 ),
                 DataCell(
-                  Text(e.total.toString(), style: const TextStyle(color: Colors.white)),
+                  Text(e.total.toString(), style: TextStyle(color: colorScheme.onSurface)),
                 ),
                 DataCell(
-                  Text(e.attended.toString(), style: const TextStyle(color: Colors.white)),
+                  Text(e.attended.toString(), style: TextStyle(color: colorScheme.onSurface)),
                 ),
                 DataCell(
                   Text(
