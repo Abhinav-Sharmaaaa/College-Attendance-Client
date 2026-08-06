@@ -3,6 +3,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'data/screens/dashboard_screen.dart';
 import 'data/services/auth_interceptor.dart';
 import 'theme.dart';
+import 'data/screens/login_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,7 +18,7 @@ class AttendanceApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: appTheme,
-      home: const LoginPage(),
+      home: const LoginScreen(),
     );
   }
 }

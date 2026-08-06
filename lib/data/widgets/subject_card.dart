@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:percent_indicator/circular_percent_indicator.dart';
 import '../../data/models/attendance_model.dart';
 
 class SubjectCard extends StatelessWidget {
@@ -8,39 +7,29 @@ class SubjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color color =
-        data.percentage < 75 ? Colors.redAccent : Colors.greenAccent;
+    final theme = Theme.of(context);
+    final bool isGood = data.percentage >= 75;
+    final Color statusColor = isGood ? theme.colorScheme.primary : theme.colorScheme.error;
+
     return Card(
-      margin: const EdgeInsets.all(10),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.2),
-      child: Padding(
-        padding: const EdgeInsets.all(15),
-        child: Row(
-          children: [
-            CircularPercentIndicator(
-              radius: 30.0,
-              lineWidth: 5.0,
-              percent: (data.percentage / 100).clamp(0, 1),
-              center: Text(
-                '${data.percentage.toInt()}%',
-                style: TextStyle(color: color, fontSize: 12),
-              ),
-              progressColor: color,
-            ),
-            const SizedBox(width: 15),
-            Expanded(
-              child: Text(
-                data.subjectName,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            Text(
-              '${data.attended}/${data.total}',
-              style: const TextStyle(color: Colors.grey),
-            ),
-          ],
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 0,
+      child: ListTile(
+        leading: Icon(Icons.book, color: statusColor),
+        title: Text(
+          data.subjectName,
+          style: theme.textTheme.titleMedium,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: Text(
+          'Attended: ${data.attended} / ${data.total}',
+          style: theme.textTheme.bodySmall,
+        ),
+        trailing: Text(
+          '${data.percentage.toStringAsFixed(1)}%',
+          style: theme.textTheme.titleMedium!
+              .copyWith(color: statusColor, fontWeight: FontWeight.bold),
         ),
       ),
     );

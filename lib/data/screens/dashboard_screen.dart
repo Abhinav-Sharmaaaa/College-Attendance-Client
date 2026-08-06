@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:percent_indicator/circular_percent_indicator.dart';
 import '../../data/local/database_helper.dart';
 import '../../data/services/auth_interceptor.dart';
 import '../../data/services/html_parser_service.dart';
@@ -358,237 +357,156 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildHeader() {
-    double overall = _overallPercentage;
-    Color glowColor =
-        overall >= 75 ? const Color(0xFF10B981) : const Color(0xFFEF4444);
+    final theme = Theme.of(context);
+    final overall = _overallPercentage;
+    final bool isGood = overall >= 75;
+    final Color statusColor = isGood ? theme.colorScheme.primary : theme.colorScheme.error;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Welcome back,',
-                      style: TextStyle(
-                        color: Colors.white.withAlpha((0.5 * 255).round()),
-                        fontSize: 14,
-                      ),
-                    ),
-                    Text(
-                      _studentName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.5,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFF18181B),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white10),
-                ),
-                child: IconButton(
-                  icon: Icon(
-                    _isTableView
-                        ? Icons.grid_view_rounded
-                        : Icons.table_chart_rounded,
-                    color: Colors.white70,
+    return Card(
+      margin: const EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 1,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Circular progress showing overall attendance
+            SizedBox(
+              height: 56,
+              width: 56,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    value: overall / 100,
+                    color: statusColor,
+                    backgroundColor: theme.colorScheme.surface,
                   ),
-                  onPressed: () async {
-                      setState(() => _isTableView = !_isTableView);
-                      await _savePreferences();
-                    },
-                  tooltip: 'Toggle View',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 25),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFF18181B),
-                  glowColor.withAlpha((0.15 * 255).round()),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: glowColor.withAlpha((0.3 * 255).round()), width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: glowColor.withAlpha((0.1 * 255).round()),
-                  blurRadius: 20,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                CircularPercentIndicator(
-                  radius: 45.0,
-                  lineWidth: 8.0,
-                  animation: true,
-                  percent: (overall / 100).clamp(0, 1),
-                  center: Text(
+                  Text(
                     '${overall.toStringAsFixed(1)}%',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
+                    style: theme.textTheme.titleMedium!.copyWith(
+                      color: statusColor,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  progressColor: glowColor,
-                  backgroundColor: Colors.white.withAlpha((0.05 * 255).round()),
-                  circularStrokeCap: CircularStrokeCap.round,
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Greeting and status text
+            Expanded(
+                child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Welcome back,', style: theme.textTheme.bodyMedium),
+                Text(
+                  _studentName,
+                  style: theme.textTheme.headlineSmall!.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _selectedMonth == '0'
-                            ? 'Full Semester Total'
-                            : 'Overall Attendance',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        _isSyncing
-                            ? _syncStatusText
-                            : (overall >= 75
-                                ? 'You are in the safe zone! Keep it up.'
-                                : 'Warning: Shortage of attendance!'),
-                        style: TextStyle(
-                          color: _isSyncing
-                              ? Colors.cyanAccent
-                              : Colors.white.withAlpha((0.6 * 255).round()),
-                          fontSize: 12,
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
+                const SizedBox(height: 6),
+                Text(
+                  _isSyncing
+                      ? _syncStatusText
+                      : isGood
+                          ? 'You are in the safe zone! Keep it up.'
+                          : 'Warning: Shortage of attendance!',
+                  style: theme.textTheme.bodySmall!.copyWith(
+                    color: _isSyncing
+                        ? theme.colorScheme.secondary
+                        : theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
+            )),
+            // View toggle – SegmentedButton
+            SegmentedButton<bool>(
+              segments: const [
+                ButtonSegment(value: false, label: Text('Cards'), icon: Icon(Icons.grid_view_rounded)),
+                ButtonSegment(value: true, label: Text('Table'), icon: Icon(Icons.table_chart_rounded)),
+              ],
+              selected: {_isTableView},
+              onSelectionChanged: (newSelection) async {
+                setState(() => _isTableView = newSelection.first);
+                await _savePreferences();
+              },
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildFilterBar() {
-    return SizedBox(
-      height: 45,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
         children: [
-          _buildPillDrop(
-            _selectedSession,
-            _sessions.map((s) => s['id']!).toList(),
-            (v) => _selectedSession = v!,
-            prefix: 'Session: ',
-            displayMap: _sessions,
-          ),
-          const SizedBox(width: 10),
-          _buildPillDrop(
-            _selectedSemester,
-            _semesters.map((s) => s['id']!).toList(),
-            (v) => _selectedSemester = v!,
-            displayMap: _semesters,
-          ),
-          const SizedBox(width: 10),
-          _buildPillDrop(
-            _selectedMonth,
-            _months.map((m) => m['id']!).toList(),
-            (v) {
-              _selectedMonth = v!;
-
-              if (v != '0') _selectedYear = _selectedSession;
+          DropdownMenu<String>(
+            initialSelection: _selectedSession,
+            label: const Text('Session'),
+            dropdownMenuEntries: _sessions
+                .map((s) => DropdownMenuEntry(value: s['id']!, label: s['name']!))
+                .toList(),
+            onSelected: (v) async {
+              setState(() => _selectedSession = v ?? _selectedSession);
+              await _savePreferences();
+              await _sync();
             },
-            displayMap: _months,
           ),
-          const SizedBox(width: 10),
+          DropdownMenu<String>(
+            initialSelection: _selectedSemester,
+            label: const Text('Semester'),
+            dropdownMenuEntries: _semesters
+                .map((s) => DropdownMenuEntry(value: s['id']!, label: s['name']!))
+                .toList(),
+            onSelected: (v) async {
+              setState(() => _selectedSemester = v ?? _selectedSemester);
+              await _savePreferences();
+              await _sync();
+            },
+          ),
+          DropdownMenu<String>(
+            initialSelection: _selectedMonth,
+            label: const Text('Month'),
+            dropdownMenuEntries: _months
+                .map((m) => DropdownMenuEntry(value: m['id']!, label: m['name']!))
+                .toList(),
+            onSelected: (v) async {
+              setState(() {
+                _selectedMonth = v ?? _selectedMonth;
+                if (v != null && v != '0') _selectedYear = _selectedSession;
+              });
+              await _savePreferences();
+              await _sync();
+            },
+          ),
           if (_selectedMonth != '0')
-            _buildPillDrop(
-              _selectedYear,
-              ['2024', '2025', '2026', '2027'],
-              (v) => _selectedYear = v!,
+            DropdownMenu<String>(
+              initialSelection: _selectedYear,
+              label: const Text('Year'),
+              dropdownMenuEntries: const [
+                DropdownMenuEntry(value: '2024', label: '2024'),
+                DropdownMenuEntry(value: '2025', label: '2025'),
+                DropdownMenuEntry(value: '2026', label: '2026'),
+                DropdownMenuEntry(value: '2027', label: '2027'),
+              ],
+              onSelected: (v) async {
+                setState(() => _selectedYear = v ?? _selectedYear);
+                await _savePreferences();
+                await _sync();
+              },
             ),
         ],
       ),
     );
   }
 
-  Widget _buildPillDrop(
-    String current,
-    List<String> values,
-    Function(String?) fn, {
-    String prefix = '',
-    List<Map<String, String>>? displayMap,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF18181B),
-        borderRadius: BorderRadius.circular(25),
-        border: Border.all(color: Colors.white.withAlpha((0.08 * 255).round())),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: current,
-          dropdownColor: const Color(0xFF18181B),
-          icon: const Padding(
-            padding: EdgeInsets.only(left: 8),
-            child: Icon(
-              Icons.keyboard_arrow_down_rounded,
-              color: Colors.white54,
-              size: 18,
-            ),
-          ),
-          style: TextStyle(
-            color: current == '0' ? Colors.amberAccent : Colors.white,
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-          ),
-          items: values.map((val) {
-            String label = displayMap != null
-                ? displayMap.firstWhere((e) => e['id'] == val)['name']!
-                : val;
-            return DropdownMenuItem(value: val, child: Text(prefix + label));
-          }).toList(),
-          onChanged: (v) async {
-            setState(() => fn(v));
-            await _savePreferences();
-            await _sync();
-          },
-        ),
-      ),
-    );
-  }
 
   Widget _buildTableView() {
     return Container(
@@ -596,7 +514,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF18181B),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withAlpha(13)),
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
